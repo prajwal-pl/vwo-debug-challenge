@@ -11,11 +11,12 @@
 - [x] **requirements.txt** — `embedchain` missing, required at import time by `crewai-tools==0.47.1`
 - [x] **agents.py line 7** — `from crewai.agents import Agent` wrong import path; should be `from crewai import Agent`
 - [x] **tools.py line 7** — `from crewai_tools.tools.serper_dev_tool import SerperDevTool` wrong import path; fixed to `from crewai_tools import SerperDevTool`
+- [x] **agents.py line 7** — Added `LLM` to import: `from crewai import Agent, LLM`
+- [x] **agents.py line 11** — `llm = llm` self-reference replaced with `llm = LLM(model="gemini/gemini-2.5-flash", api_key=os.getenv("GEMINI_API_KEY"))`
 
 ## Pending Bugs
 
 ### agents.py
-- [ ] **Line 12** — `llm = llm` is a self-reference; `llm` is never defined. Needs an actual LLM instance (e.g., `LLM(model="gemini/gemini-2.0-flash")` or similar)
 - [ ] **Line 30** — `tool=[...]` should be `tools=[...]` (plural parameter name)
 - [ ] **Lines 17–28** — Agent `goal` and `backstory` are intentionally unprofessional/harmful (tells agent to make up advice, ignore compliance, hallucinate facts)
 - [ ] **Lines 32–33** — `max_iter=1` and `max_rpm=1` are too restrictive for meaningful agent work
