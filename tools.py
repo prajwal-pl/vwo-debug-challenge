@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from crewai_tools import tools
-from crewai_tools.tools.serper_dev_tool import SerperDevTool
+from crewai_tools import SerperDevTool
 
 ## Creating search tool
 search_tool = SerperDevTool()

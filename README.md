@@ -1,38 +1,43 @@
-# Financial Document Analyzer - Debug Assignment
+# Financial Document Analyzer - Bug Tracker
 
-## Project Overview
-A comprehensive financial document analysis system that processes corporate reports, financial statements, and investment documents using AI-powered analysis agents.
+## Fixed Bugs
 
-## Getting Started
+- [x] **requirements.txt** — `google-api-core==2.10.0` conflicted with `google-ai-generativelanguage` (excluded `2.10.*`)
+- [x] **requirements.txt** — `opentelemetry-instrumentation==0.46b0` incompatible with `opentelemetry-api>=1.30.0` required by crewai
+- [x] **requirements.txt** — `pydantic_core==2.8.0` mismatched with `pydantic==2.6.1` (needs `pydantic-core==2.16.2`)
+- [x] **requirements.txt** — `openai==1.30.5` too old for `litellm 1.72.0` (needs `>=1.68.2`)
+- [x] **requirements.txt** — `protobuf==4.25.3` conflicted between google packages (`<5.0`) and opentelemetry (`>=5.0`)
+- [x] **requirements.txt** — `crewai-tools==0.76.0` incompatible with `crewai==0.130.0` (no `crewai.rag` module); restored to `0.47.1`
+- [x] **requirements.txt** — `embedchain` missing, required at import time by `crewai-tools==0.47.1`
+- [x] **agents.py line 7** — `from crewai.agents import Agent` wrong import path; should be `from crewai import Agent`
+- [x] **tools.py line 7** — `from crewai_tools.tools.serper_dev_tool import SerperDevTool` wrong import path; fixed to `from crewai_tools import SerperDevTool`
 
-### Install Required Libraries
-```sh
-pip install -r requirement.txt
-```
+## Pending Bugs
 
-### Sample Document
-The system analyzes financial documents like Tesla's Q2 2025 financial update.
+### agents.py
+- [ ] **Line 12** — `llm = llm` is a self-reference; `llm` is never defined. Needs an actual LLM instance (e.g., `LLM(model="gemini/gemini-2.0-flash")` or similar)
+- [ ] **Line 30** — `tool=[...]` should be `tools=[...]` (plural parameter name)
+- [ ] **Lines 17–28** — Agent `goal` and `backstory` are intentionally unprofessional/harmful (tells agent to make up advice, ignore compliance, hallucinate facts)
+- [ ] **Lines 32–33** — `max_iter=1` and `max_rpm=1` are too restrictive for meaningful agent work
+- [ ] **Lines 42–54** — `verifier` agent goal/backstory tells it to approve everything without reading, ignore accuracy
+- [ ] **Lines 63–77** — `investment_advisor` agent goal/backstory promotes selling sketchy products, fake credentials, ignoring SEC compliance
+- [ ] **Lines 82–96** — `risk_assessor` agent goal/backstory promotes ignoring real risk factors, YOLO mentality
 
-**To add Tesla's financial document:**
-1. Download the Tesla Q2 2025 update from: https://www.tesla.com/sites/default/files/downloads/TSLA-Q2-2025-Update.pdf
-2. Save it as `data/sample.pdf` in the project directory
-3. Or upload any financial PDF through the API endpoint
+### tools.py
+- [ ] **Line 6** — `from crewai_tools import tools` is an invalid import (no such export); line should be removed
+- [ ] **Line 14** — `read_data_tool` is a plain method, not decorated as a crewai tool (needs `@tool` decorator)
+- [ ] **Line 14** — `read_data_tool` is missing `self` parameter (instance method in a class but defined without `self`)
+- [ ] **Line 25** — `Pdf` is never imported; needs a proper PDF loader (e.g., `from langchain_community.document_loaders import PyPDFLoader`)
+- [ ] **Line 14** — Method is `async` but crewai tools are typically synchronous
 
-**Note:** Current `data/sample.pdf` is a placeholder - replace with actual Tesla financial document for proper testing.
+### main.py
+- [ ] **Line 30** — `async def analyze_financial_document(...)` name collides with the imported task `analyze_financial_document` on line 8, shadowing it
+- [ ] **Line 12** — `run_crew()` accepts `file_path` parameter but never uses it (uploaded file path is ignored)
+- [ ] **Line 14** — `Crew` only includes `financial_analyst` in agents list, but project defines multiple agents that should participate
 
-# You're All Not Set!
-🐛 **Debug Mode Activated!** The project has bugs waiting to be squashed - your mission is to fix them and bring it to life.
-
-## Debugging Instructions
-
-1. **Identify the Bug**: Carefully read the code in each file and understand the expected behavior. There is a bug in each line of code. So be careful.
-2. **Fix the Bug**: Implement the necessary changes to fix the bug.
-3. **Test the Fix**: Run the project and verify that the bug is resolved.
-4. **Repeat**: Continue this process until all bugs are fixed.
-
-## Expected Features
-- Upload financial documents (PDF format)
-- AI-powered financial analysis
-- Investment recommendations
-- Risk assessment
-- Market insights
+### task.py
+- [ ] **Lines 8–25** — `analyze_financial_document` task description tells agent to make things up, use imagination, include fake URLs, contradict itself
+- [ ] **Lines 28–47** — `investment_analysis` task description tells agent to ignore user query, recommend unnecessary products, make up research
+- [ ] **Lines 50–69** — `risk_assessment` task description tells agent to ignore compliance, recommend dangerous strategies, use fake institutions
+- [ ] **Lines 72–82** — `verification` task description tells agent to skip reading files, hallucinate, approve everything blindly
+- [ ] **Line 24** — `tools=[FinancialDocumentTool.read_data_tool]` passes a raw undecorated method, not a valid crewai tool
