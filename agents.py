@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-from crewai.agents import Agent
+from crewai import Agent
 
 from tools import search_tool, FinancialDocumentTool
 
