@@ -23,6 +23,7 @@
 - [x] **agents.py line 27** — `tool=[FinancialDocumentTool.read_data_tool]` fixed to `tools=[read_data_tool]` (plural name + standalone function)
 - [x] **task.py line 5** — `from tools import FinancialDocumentTool` changed to `from tools import read_data_tool`
 - [x] **task.py lines 23,44,65,80** — `tools=[FinancialDocumentTool.read_data_tool]` changed to `tools=[read_data_tool]`
+- [x] **main.py line 30** — `async def analyze_financial_document(...)` renamed to `analyze_document_endpoint` to avoid shadowing the imported task
 
 ## Pending Bugs
 
@@ -34,7 +35,6 @@
 - [ ] **Lines 82–96** — `risk_assessor` agent goal/backstory promotes ignoring real risk factors, YOLO mentality
 
 ### main.py
-- [ ] **Line 30** — `async def analyze_financial_document(...)` name collides with the imported task `analyze_financial_document` on line 8, shadowing it
 - [ ] **Line 12** — `run_crew()` accepts `file_path` parameter but never uses it (uploaded file path is ignored)
 - [ ] **Line 14** — `Crew` only includes `financial_analyst` in agents list, but project defines multiple agents that should participate
 
