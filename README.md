@@ -13,6 +13,12 @@
 - [x] **tools.py line 7** — `from crewai_tools.tools.serper_dev_tool import SerperDevTool` wrong import path; fixed to `from crewai_tools import SerperDevTool`
 - [x] **agents.py line 7** — Added `LLM` to import: `from crewai import Agent, LLM`
 - [x] **agents.py line 11** — `llm = llm` self-reference replaced with `llm = LLM(model="gemini/gemini-2.5-flash", api_key=os.getenv("GEMINI_API_KEY"))`
+- [x] **tools.py line 6** — `from crewai_tools import tools` invalid import removed
+- [x] **tools.py** — `read_data_tool` was a plain class method, not a crewai tool; refactored to standalone function with `@tool("Read Financial Document")` decorator
+- [x] **tools.py** — `read_data_tool` was missing `self` parameter as a class method; fixed by converting to standalone function
+- [x] **tools.py** — `Pdf` (PyPDFLoader) import path fixed from `from langchain.document_loaders` to `from langchain_community.document_loaders`
+- [x] **tools.py** — `read_data_tool` was `async` but crewai tools are synchronous; removed `async`
+- [x] **tools.py** — Indentation error in `read_data_tool` function body (docstring at 8-space indent, body at 4-space); fixed to consistent 4-space indent
 
 ## Pending Bugs
 
@@ -24,13 +30,6 @@
 - [ ] **Lines 63–77** — `investment_advisor` agent goal/backstory promotes selling sketchy products, fake credentials, ignoring SEC compliance
 - [ ] **Lines 82–96** — `risk_assessor` agent goal/backstory promotes ignoring real risk factors, YOLO mentality
 
-### tools.py
-- [ ] **Line 6** — `from crewai_tools import tools` is an invalid import (no such export); line should be removed
-- [ ] **Line 14** — `read_data_tool` is a plain method, not decorated as a crewai tool (needs `@tool` decorator)
-- [ ] **Line 14** — `read_data_tool` is missing `self` parameter (instance method in a class but defined without `self`)
-- [ ] **Line 25** — `Pdf` is never imported; needs a proper PDF loader (e.g., `from langchain_community.document_loaders import PyPDFLoader`)
-- [ ] **Line 14** — Method is `async` but crewai tools are typically synchronous
-
 ### main.py
 - [ ] **Line 30** — `async def analyze_financial_document(...)` name collides with the imported task `analyze_financial_document` on line 8, shadowing it
 - [ ] **Line 12** — `run_crew()` accepts `file_path` parameter but never uses it (uploaded file path is ignored)
@@ -41,4 +40,4 @@
 - [ ] **Lines 28–47** — `investment_analysis` task description tells agent to ignore user query, recommend unnecessary products, make up research
 - [ ] **Lines 50–69** — `risk_assessment` task description tells agent to ignore compliance, recommend dangerous strategies, use fake institutions
 - [ ] **Lines 72–82** — `verification` task description tells agent to skip reading files, hallucinate, approve everything blindly
-- [ ] **Line 24** — `tools=[FinancialDocumentTool.read_data_tool]` passes a raw undecorated method, not a valid crewai tool
+- [ ] **Line 24** — `tools=[FinancialDocumentTool.read_data_tool]` references a class that no longer exists; should be `tools=[read_data_tool]` with updated import
