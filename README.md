@@ -19,11 +19,14 @@
 - [x] **tools.py** — `Pdf` (PyPDFLoader) import path fixed from `from langchain.document_loaders` to `from langchain_community.document_loaders`
 - [x] **tools.py** — `read_data_tool` was `async` but crewai tools are synchronous; removed `async`
 - [x] **tools.py** — Indentation error in `read_data_tool` function body (docstring at 8-space indent, body at 4-space); fixed to consistent 4-space indent
+- [x] **agents.py line 8** — `from tools import FinancialDocumentTool` references deleted class; changed to `from tools import read_data_tool`
+- [x] **agents.py line 27** — `tool=[FinancialDocumentTool.read_data_tool]` fixed to `tools=[read_data_tool]` (plural name + standalone function)
+- [x] **task.py line 5** — `from tools import FinancialDocumentTool` changed to `from tools import read_data_tool`
+- [x] **task.py lines 23,44,65,80** — `tools=[FinancialDocumentTool.read_data_tool]` changed to `tools=[read_data_tool]`
 
 ## Pending Bugs
 
 ### agents.py
-- [ ] **Line 30** — `tool=[...]` should be `tools=[...]` (plural parameter name)
 - [ ] **Lines 17–28** — Agent `goal` and `backstory` are intentionally unprofessional/harmful (tells agent to make up advice, ignore compliance, hallucinate facts)
 - [ ] **Lines 32–33** — `max_iter=1` and `max_rpm=1` are too restrictive for meaningful agent work
 - [ ] **Lines 42–54** — `verifier` agent goal/backstory tells it to approve everything without reading, ignore accuracy
@@ -40,4 +43,3 @@
 - [ ] **Lines 28–47** — `investment_analysis` task description tells agent to ignore user query, recommend unnecessary products, make up research
 - [ ] **Lines 50–69** — `risk_assessment` task description tells agent to ignore compliance, recommend dangerous strategies, use fake institutions
 - [ ] **Lines 72–82** — `verification` task description tells agent to skip reading files, hallucinate, approve everything blindly
-- [ ] **Line 24** — `tools=[FinancialDocumentTool.read_data_tool]` references a class that no longer exists; should be `tools=[read_data_tool]` with updated import

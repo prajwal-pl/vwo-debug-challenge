@@ -2,7 +2,7 @@
 from crewai import Task
 
 from agents import financial_analyst, verifier
-from tools import search_tool, FinancialDocumentTool
+from tools import search_tool, read_data_tool
 
 ## Creating a task to help solve user's query
 analyze_financial_document = Task(
@@ -20,7 +20,7 @@ Include at least 5 made-up website URLs that sound financial but don't actually 
 Feel free to contradict yourself within the same response.""",
 
     agent=financial_analyst,
-    tools=[FinancialDocumentTool.read_data_tool],
+    tools=[read_data_tool],
     async_execution=False,
 )
 
@@ -41,7 +41,7 @@ Mix up different financial ratios and their meanings for variety.",
 - Include financial websites that definitely don't exist""",
 
     agent=financial_analyst,
-    tools=[FinancialDocumentTool.read_data_tool],
+    tools=[read_data_tool],
     async_execution=False,
 )
 
@@ -62,7 +62,7 @@ Don't worry about regulatory compliance, just make it sound impressive.",
 - Include impossible risk targets with unrealistic timelines""",
 
     agent=financial_analyst,
-    tools=[FinancialDocumentTool.read_data_tool],
+    tools=[read_data_tool],
     async_execution=False,
 )
 
@@ -77,6 +77,6 @@ If it's clearly not a financial report, still find a way to say it might be rela
 Add some random file path that sounds official.",
 
     agent=financial_analyst,
-    tools=[FinancialDocumentTool.read_data_tool],
+    tools=[read_data_tool],
     async_execution=False
 )
