@@ -25,8 +25,8 @@ financial_analyst=Agent(
     ),
     tools=[read_data_tool],
     llm=llm,
-    max_iter=1,
-    max_rpm=1,
+    max_iter=15,
+    max_rpm=10,
     allow_delegation=True  # Allow delegation to other specialists
 )
 
@@ -43,8 +43,8 @@ verifier = Agent(
         "You prioritize accuracy and regulatory compliance over speed."
     ),
     llm=llm,
-    max_iter=1,
-    max_rpm=1,
+    max_iter=15,
+    max_rpm=10,
     allow_delegation=True
 )
 
@@ -61,8 +61,8 @@ investment_advisor = Agent(
         "You present both bull and bear cases for any investment thesis."
     ),
     llm=llm,
-    max_iter=1,
-    max_rpm=1,
+    max_iter=15,
+    max_rpm=10,
     allow_delegation=False
 )
 
@@ -79,7 +79,7 @@ risk_assessor = Agent(
         "You follow industry best practices and regulatory standards in all risk assessments."
     ),
     llm=llm,
-    max_iter=1,
-    max_rpm=1,
+    max_iter=15,
+    max_rpm=10,
     allow_delegation=False
 )

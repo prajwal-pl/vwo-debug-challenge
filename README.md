@@ -32,12 +32,10 @@
 - [x] **task.py** — `investment_analysis` description/expected_output rewritten to request balanced, data-backed recommendations
 - [x] **task.py** — `risk_assessment` description/expected_output rewritten to request proper risk evaluation with mitigation strategies
 - [x] **task.py** — `verification` description/expected_output rewritten to request proper document classification and validation
+- [x] **agents.py** — `max_iter=1` and `max_rpm=1` changed to `max_iter=15` and `max_rpm=10` on all 4 agents for meaningful agent work
+- [x] **main.py** — `run_crew()` now passes `file_path` to crew inputs so agents know which uploaded file to read
+- [x] **main.py** — `Crew` agents list expanded from `[financial_analyst]` to include all 4 agents: `financial_analyst`, `verifier`, `investment_advisor`, `risk_assessor`
+- [x] **main.py** — `Crew` tasks list expanded to include all 4 tasks: `verification`, `analyze_financial_document`, `investment_analysis`, `risk_assessment`
+- [x] **task.py** — All task descriptions updated to include `{file_path}` so agents know the correct path to pass to the Read Financial Document tool
 
-## Pending Bugs
-
-### agents.py
-- [ ] **Lines 30–31** — `max_iter=1` and `max_rpm=1` are too restrictive for meaningful agent work (applies to all 4 agents)
-
-### main.py
-- [ ] **Line 12** — `run_crew()` accepts `file_path` parameter but never passes it to the crew inputs (uploaded file path is ignored, tool defaults to `data/sample.pdf`)
-- [ ] **Line 14** — `Crew` only includes `financial_analyst` in agents list, but project defines multiple agents that should participate
+## All Bugs Fixed!

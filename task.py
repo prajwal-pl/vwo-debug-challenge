@@ -6,8 +6,8 @@ from tools import search_tool, read_data_tool
 
 ## Creating a task to help solve user's query
 analyze_financial_document = Task(
-    description="Analyze the financial document to answer the user's query: {query}.\n\
-Read the uploaded financial document carefully and extract key financial metrics.\n\
+    description="Analyze the financial document located at '{file_path}' to answer the user's query: {query}.\n\
+Read the uploaded financial document carefully using the Read Financial Document tool with the path '{file_path}'.\n\
 Provide a detailed analysis covering revenue, expenses, profit margins, cash flow, and key ratios.\n\
 Identify notable trends, year-over-year changes, and significant financial events.\n\
 Search the internet for relevant market context and recent news about the company.",
@@ -28,7 +28,7 @@ Search the internet for relevant market context and recent news about the compan
 ## Creating an investment analysis task
 investment_analysis = Task(
     description="Based on the financial document analysis, provide investment recommendations for the query: {query}.\n\
-Evaluate the company's financial health, growth potential, and competitive position.\n\
+The financial document is located at '{file_path}'. Use the Read Financial Document tool with this path if needed.\n\
 Assess valuation metrics and compare with industry peers.\n\
 Provide balanced buy/hold/sell recommendations supported by data from the document.\n\
 Consider both short-term catalysts and long-term fundamentals.",
@@ -48,7 +48,7 @@ Consider both short-term catalysts and long-term fundamentals.",
 
 ## Creating a risk assessment task
 risk_assessment = Task(
-    description="Perform a comprehensive risk assessment based on the financial document for the query: {query}.\n\
+    description="Perform a comprehensive risk assessment based on the financial document at '{file_path}' for the query: {query}.\n\
 Evaluate market risk, credit risk, liquidity risk, and operational risk.\n\
 Analyze debt levels, cash flow stability, and exposure to market volatility.\n\
 Assess regulatory and compliance risks relevant to the company.\n\
@@ -69,8 +69,8 @@ Provide actionable risk mitigation recommendations.",
 
     
 verification = Task(
-    description="Verify whether the uploaded document is a valid financial document.\n\
-Check for standard financial document indicators such as balance sheets, income statements, cash flow statements, or SEC filing headers.\n\
+    description="Verify whether the uploaded document at '{file_path}' is a valid financial document.\n\
+Use the Read Financial Document tool with the path '{file_path}' to read the document.\n\
 Validate that the extracted data is consistent and complete.",
 
     expected_output="""A verification report including:
