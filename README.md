@@ -24,22 +24,20 @@
 - [x] **task.py line 5** — `from tools import FinancialDocumentTool` changed to `from tools import read_data_tool`
 - [x] **task.py lines 23,44,65,80** — `tools=[FinancialDocumentTool.read_data_tool]` changed to `tools=[read_data_tool]`
 - [x] **main.py line 30** — `async def analyze_financial_document(...)` renamed to `analyze_document_endpoint` to avoid shadowing the imported task
+- [x] **agents.py** — `financial_analyst` goal/backstory replaced with professional, data-driven analysis prompts
+- [x] **agents.py** — `verifier` goal/backstory replaced with proper document verification and compliance-focused prompts
+- [x] **agents.py** — `investment_advisor` goal/backstory replaced with balanced, SEC-compliant investment analysis prompts
+- [x] **agents.py** — `risk_assessor` goal/backstory replaced with proper risk management framework prompts (VaR, stress testing, etc.)
+- [x] **task.py** — `analyze_financial_document` description/expected_output rewritten to request data-driven financial analysis
+- [x] **task.py** — `investment_analysis` description/expected_output rewritten to request balanced, data-backed recommendations
+- [x] **task.py** — `risk_assessment` description/expected_output rewritten to request proper risk evaluation with mitigation strategies
+- [x] **task.py** — `verification` description/expected_output rewritten to request proper document classification and validation
 
 ## Pending Bugs
 
 ### agents.py
-- [ ] **Lines 17–28** — Agent `goal` and `backstory` are intentionally unprofessional/harmful (tells agent to make up advice, ignore compliance, hallucinate facts)
-- [ ] **Lines 32–33** — `max_iter=1` and `max_rpm=1` are too restrictive for meaningful agent work
-- [ ] **Lines 42–54** — `verifier` agent goal/backstory tells it to approve everything without reading, ignore accuracy
-- [ ] **Lines 63–77** — `investment_advisor` agent goal/backstory promotes selling sketchy products, fake credentials, ignoring SEC compliance
-- [ ] **Lines 82–96** — `risk_assessor` agent goal/backstory promotes ignoring real risk factors, YOLO mentality
+- [ ] **Lines 30–31** — `max_iter=1` and `max_rpm=1` are too restrictive for meaningful agent work (applies to all 4 agents)
 
 ### main.py
-- [ ] **Line 12** — `run_crew()` accepts `file_path` parameter but never uses it (uploaded file path is ignored)
+- [ ] **Line 12** — `run_crew()` accepts `file_path` parameter but never passes it to the crew inputs (uploaded file path is ignored, tool defaults to `data/sample.pdf`)
 - [ ] **Line 14** — `Crew` only includes `financial_analyst` in agents list, but project defines multiple agents that should participate
-
-### task.py
-- [ ] **Lines 8–25** — `analyze_financial_document` task description tells agent to make things up, use imagination, include fake URLs, contradict itself
-- [ ] **Lines 28–47** — `investment_analysis` task description tells agent to ignore user query, recommend unnecessary products, make up research
-- [ ] **Lines 50–69** — `risk_assessment` task description tells agent to ignore compliance, recommend dangerous strategies, use fake institutions
-- [ ] **Lines 72–82** — `verification` task description tells agent to skip reading files, hallucinate, approve everything blindly
