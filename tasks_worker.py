@@ -3,6 +3,7 @@ from celery_app import celery
 from crewai import Crew, Process
 from agents import financial_analyst, verifier, investment_advisor, risk_assessor
 from task import analyze_financial_document, investment_analysis, risk_assessment, verification
+from db import update_analysis_status
 
 
 @celery.task(bind=True, name="analyze_document", max_retries=3)
@@ -10,6 +11,7 @@ def analyze_document_task(self, query: str, file_path: str):
     """Celery task that runs the CrewAI crew for financial document analysis."""
     try:
         self.update_state(state="PROCESSING", meta={"status": "Running AI agents..."})
+        update_analysis_status(self.request.id, "processing")
 
         financial_crew = Crew(
             agents=[financial_analyst, verifier, investment_advisor, risk_assessor],
@@ -19,10 +21,15 @@ def analyze_document_task(self, query: str, file_path: str):
 
         result = financial_crew.kickoff({"query": query, "file_path": file_path})
 
+        analysis_text = str(result)
+
+        # Persist to database
+        update_analysis_status(self.request.id, "success", analysis=analysis_text)
+
         return {
             "status": "success",
             "query": query,
-            "analysis": str(result),
+            "analysis": analysis_text,
             "file_path": file_path,
         }
 
@@ -36,8 +43,11 @@ def analyze_document_task(self, query: str, file_path: str):
                 state="RETRYING",
                 meta={"status": f"Rate limited. Retrying in {countdown}s..."},
             )
+            update_analysis_status(self.request.id, "retrying")
             raise self.retry(exc=exc, countdown=countdown)
 
+        # Persist failure to database
+        update_analysis_status(self.request.id, "failed", error=error_msg)
         raise
 
     finally:

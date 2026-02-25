@@ -21,7 +21,7 @@ Client ──GET /status/{id}──▸ FastAPI ◂── result ──── Red
 | `investment_advisor` | Generates balanced, data-backed investment recommendations |
 | `risk_assessor` | Evaluates risks using VaR, stress-testing, and mitigation frameworks |
 
-**Tech Stack**: Python 3.12, FastAPI, CrewAI 0.130.0, Celery 5.6, Redis, Google Gemini (gemini-2.5-flash via litellm), LangChain Community (PDF loading)
+**Tech Stack**: Python 3.12, FastAPI, CrewAI 0.130.0, Celery 5.6, Redis, SQLite, Google Gemini (gemini-2.5-flash via litellm), LangChain Community (PDF loading)
 
 ---
 
@@ -56,6 +56,7 @@ Create a `.env` file or export directly:
 export GEMINI_API_KEY="your-gemini-api-key"
 export SERPER_API_KEY="your-serper-api-key"   # optional
 export REDIS_URL="redis://localhost:6379/0"   # default if not set
+export DB_PATH="financial_analyzer.db"       # default if not set
 ```
 
 ---
@@ -113,11 +114,13 @@ Submit a PDF document for analysis. Returns immediately with a `task_id`.
 |-------|------|----------|-------------|
 | `file` | file | Yes | PDF document to analyze |
 | `query` | string | No | Analysis prompt (default: "Analyze this financial document for investment insights") |
+| `user_id` | integer | No | Associate analysis with a user (must exist in DB) |
 
 ```bash
 curl -X POST http://localhost:8000/analyze \
   -F "file=@data/TSLA-Q2-2025-Update.pdf" \
-  -F "query=What are the key financial risks?"
+  -F "query=What are the key financial risks?" \
+  -F "user_id=1"
 ```
 
 **Response:**
@@ -125,6 +128,7 @@ curl -X POST http://localhost:8000/analyze \
 {
   "status": "queued",
   "task_id": "abc123-def456-...",
+  "analysis_id": 1,
   "message": "Document submitted for analysis. Poll /status/{task_id} for results."
 }
 ```
@@ -163,6 +167,145 @@ Poll the analysis status. Returns the result when complete.
 
 **Possible status values:** `pending`, `processing`, `retrying`, `success`, `failed`
 
+### `GET /analyses`
+
+List past analyses with optional filters and pagination.
+
+**Query Parameters:**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `user_id` | int | — | Filter by user |
+| `status` | string | — | Filter by status (`queued`, `processing`, `success`, `failed`) |
+| `limit` | int | 20 | Max results (1–100) |
+| `offset` | int | 0 | Pagination offset |
+
+```bash
+curl -s "http://localhost:8000/analyses?user_id=1&status=success&limit=5"
+```
+
+**Response:**
+```json
+{
+  "count": 1,
+  "analyses": [
+    {
+      "id": 1,
+      "task_id": "abc123-...",
+      "user_id": 1,
+      "filename": "TSLA-Q2-2025-Update.pdf",
+      "file_size": 9489744,
+      "query": "Analyze revenue trends",
+      "status": "success",
+      "analysis": "## Financial Analysis Report\n...",
+      "error": null,
+      "created_at": "2026-02-25 09:59:54",
+      "completed_at": "2026-02-25 10:03:12"
+    }
+  ]
+}
+```
+
+### `GET /analyses/stats`
+
+Get aggregate analysis statistics, optionally filtered by user.
+
+```bash
+curl -s http://localhost:8000/analyses/stats
+curl -s "http://localhost:8000/analyses/stats?user_id=1"
+```
+
+**Response:**
+```json
+{
+  "total": 10,
+  "succeeded": 7,
+  "failed": 1,
+  "in_progress": 2,
+  "total_bytes_processed": 94897440
+}
+```
+
+### `GET /analyses/{task_id}`
+
+Get a specific analysis record by its Celery task ID.
+
+```bash
+curl -s http://localhost:8000/analyses/abc123-def456-...
+```
+
+### `DELETE /analyses/{task_id}`
+
+Delete a specific analysis record.
+
+```bash
+curl -s -X DELETE http://localhost:8000/analyses/abc123-def456-...
+```
+
+**Response:**
+```json
+{ "message": "Analysis deleted", "task_id": "abc123-def456-..." }
+```
+
+### `POST /users`
+
+Create a new user.
+
+**Request** (multipart/form-data):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `username` | string | Yes | Unique username |
+| `email` | string | No | Email address (unique if provided) |
+
+```bash
+curl -s -X POST http://localhost:8000/users -F "username=alice" -F "email=alice@example.com"
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "username": "alice",
+  "email": "alice@example.com",
+  "created_at": "2026-02-25 09:59:23"
+}
+```
+
+### `GET /users`
+
+List all users with pagination.
+
+```bash
+curl -s "http://localhost:8000/users?limit=10"
+```
+
+### `GET /users/{user_id}`
+
+Get user details including their recent analyses and stats.
+
+```bash
+curl -s http://localhost:8000/users/1
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "username": "alice",
+  "email": "alice@example.com",
+  "created_at": "2026-02-25 09:59:23",
+  "analyses": [ ... ],
+  "stats": {
+    "total": 3,
+    "succeeded": 2,
+    "failed": 0,
+    "in_progress": 1,
+    "total_bytes_processed": 28469232
+  }
+}
+```
+
 ---
 
 ## CLI Scripts
@@ -200,18 +343,20 @@ Automated test runner with multiple modes:
 ## Project Structure
 
 ```
-├── main.py             # FastAPI app — endpoints for submit & status polling
-├── agents.py           # 4 CrewAI agents with Gemini LLM configuration
-├── task.py             # 4 CrewAI task definitions (verification, analysis, investment, risk)
-├── tools.py            # PDF reader tool (@tool) and SerperDevTool (web search)
-├── celery_app.py       # Celery + Redis configuration
-├── tasks_worker.py     # Celery task — runs CrewAI crew with retry logic
-├── requirements.txt    # Pinned dependencies
-├── start.sh            # Launch all services
-├── stop.sh             # Stop all services
-├── test.sh             # API test runner
-├── data/               # Uploaded PDFs (auto-created)
-└── outputs/            # Output directory
+├── main.py                 # FastAPI app — all API endpoints
+├── db.py                   # SQLite database module (schema, CRUD operations)
+├── agents.py               # 4 CrewAI agents with Gemini LLM configuration
+├── task.py                 # 4 CrewAI task definitions
+├── tools.py                # PDF reader tool (@tool) and SerperDevTool
+├── celery_app.py           # Celery + Redis configuration
+├── tasks_worker.py         # Celery task — runs CrewAI crew with retry logic
+├── requirements.txt        # Pinned dependencies
+├── financial_analyzer.db   # SQLite database (auto-created on startup)
+├── start.sh                # Launch all services
+├── stop.sh                 # Stop all services
+├── test.sh                 # API test runner
+├── data/                   # Uploaded PDFs (auto-created)
+└── outputs/                # Output directory
 ```
 
 ---
@@ -287,7 +432,9 @@ Automated test runner with multiple modes:
 
 ---
 
-## Bonus: Queue Worker Model
+## Bonus Features
+
+### 1. Queue Worker Model (Celery + Redis)
 
 The original implementation ran CrewAI agents synchronously inside the FastAPI request handler, blocking the server for minutes per request. This was replaced with a **Celery + Redis** async task queue:
 
@@ -297,12 +444,48 @@ The original implementation ran CrewAI agents synchronously inside the FastAPI r
 - **File cleanup**: Uploaded PDFs are automatically deleted after processing (success or failure)
 - **Result persistence**: Analysis results are stored in Redis for 1 hour
 
-### New Files
-
 | File | Purpose |
 |------|---------|
 | `celery_app.py` | Celery configuration — Redis as broker and result backend, `task_acks_late=True` for reliability |
 | `tasks_worker.py` | Celery task wrapping the CrewAI crew execution with rate-limit retry and file cleanup |
+
+### 2. Database Integration (SQLite)
+
+Added a local SQLite database for persistent storage of analysis results and user data. Unlike Redis (which expires results after 1 hour), the database provides permanent history.
+
+**Database Schema:**
+
+```
+┌──────────────┐         ┌────────────────────┐
+│    users     │         │     analyses       │
+├──────────────┤         ├────────────────────┤
+│ id (PK)      │◄───┐    │ id (PK)            │
+│ username     │    └────│ user_id (FK, null)  │
+│ email        │         │ task_id (unique)    │
+│ created_at   │         │ filename            │
+└──────────────┘         │ file_size           │
+                         │ query               │
+                         │ status              │
+                         │ analysis            │
+                         │ error               │
+                         │ created_at          │
+                         │ completed_at        │
+                         └────────────────────┘
+```
+
+**Key Features:**
+- **Persistent history**: All analyses are stored permanently (not just 1 hour like Redis)
+- **User tracking**: Optionally associate analyses with users via `user_id`
+- **Aggregate stats**: `GET /analyses/stats` returns success/failure counts and total bytes processed
+- **Filtering & pagination**: Query by user, status, with `limit`/`offset`
+- **WAL mode**: SQLite uses Write-Ahead Logging for concurrent read access from FastAPI and Celery
+- **Foreign keys**: User-analysis relationship with `ON DELETE SET NULL`
+- **Zero dependencies**: Uses Python's built-in `sqlite3` module — no extra packages
+- **Dual-write**: Both the Celery worker and the `/status` endpoint sync results to the DB
+
+| File | Purpose |
+|------|---------|
+| `db.py` | Database module — schema creation, connection management, all CRUD operations |
 
 ---
 
@@ -311,3 +494,5 @@ The original implementation ran CrewAI agents synchronously inside the FastAPI r
 - **Gemini free tier** is limited to 5 requests/minute. With 4 agents, a single analysis can trigger rate limits. The Celery worker retries automatically with exponential backoff.
 - **PDF files** uploaded via the API are saved to `data/` and cleaned up after analysis completes.
 - The `SERPER_API_KEY` is optional — the web search tool will simply not return results without it.
+- **SQLite database** (`financial_analyzer.db`) is auto-created on first startup. Delete it to reset all stored data.
+- **User accounts** are lightweight (username + optional email) with no authentication — intended for tracking, not security.
